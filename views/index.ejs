@@ -129,7 +129,7 @@
             btn.addEventListener('click',()=>{
                 currentEditId=btn.getAttribute('data-id')
                 const row=btn.closest('tr')
-                const currentText=row.querySelector('td').innerText;
+                const currentText=row.querySelectorAll('td')[1].innerText;
 
                 document.getElementById('editInput').value=currentText;
                 document.getElementById('editModal').classList.remove('hidden')

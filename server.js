@@ -1,6 +1,7 @@
 const express=require('express')
 const mongoose=require('mongoose')
 const ejs=require('ejs')
+const todoRouter=require('./routes/myRoutes.js')
 const app=express()
 const Input=require('./model/Input.js')
 app.use(express.json())
@@ -25,46 +26,7 @@ mongoose.connect('mongodb+srv://testUser:test%40123@cluster0.icfsgud.mongodb.net
     console.error('mongoDb connection error:',err)
 })
 
-app.post('/add',async(req,res)=>{
-    const {data}=req.body 
-    const newInput=new Input({
-        text:data,
-        date:Date.now()
-    })
-    await newInput.save()
-    res.status(200).json({success:true})
-
-})
-
-app.delete('/delete/:id',async(req,res)=>{
-    const {id}=req.params;
-    
-    await Input.findByIdAndDelete(id)
-    res.status(200).json({success:true})
-
-})
-
-app.put('/edit/:id',async(req,res)=>{
-    const {id}=req.params;
-    
-    const {text}=req.body
-    const update=await Input.findByIdAndUpdate(id,{text:text,date:new Date()},{new:true})
-    if(!update){
-       return res.status(404).json({success:false})
-
-    }
-    res.status(200).json({success:true})
-})
-
-app.put('/toggle/:id',async(req,res)=>{
-    const {id}=req.params;
-    const {completed}=req.body;
-    const update=await Input.findByIdAndUpdate(id,{completed:completed})
-    if(!update){
-        return res.status(404).json({success:false})
-    }
-    res.status(200).json({success:true})
-})
+app.use('/',todoRouter)
 app.listen(3000,()=>console.log('server started'))
 
 
