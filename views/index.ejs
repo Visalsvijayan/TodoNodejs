@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+</head>
+<body>
+    
+     <div class=" flex flex-col gap-4 items-center justify-center  bg-gray-400 h-screen ">
+       <h1 class="text-center text-3xl text-white font-bold">Todo List</h1>
+        <div class="bg-white h-40 rounded flex items-center p-6 gap-2 ">
+             <input  id='textInput'class='border border-black-600 py-2'type="text" placeholder="">
+             <button id='btn'class="bg-red-600 text-white rounded py-2 px-4">Add</button>
+        </div>
+        <div class="bg-white  sm:w-full md:w-1/2  px-4 max-h-64 overflow-y-auto rounded-lg shadow-md">
+        <table  class="border-separate   w-full border-spacing-y-3">
+            <thead class="sticky top-0 bg-white">
+                <tr>
+                    <th class="text-left px-4 py-2">Done</th>
+                    <th class="text-left  px-4 py-2">Todo</th>
+                    <th class="text-left  px-4 py-2">Date</th>
+                    <th class="text-left  px-4 py-2">Action</th>
+                </tr>
+            </thead>
+            <% if(data){%>
+            <tbody>
+                <% data.forEach((item)=>{ %>
+                        <tr class="odd:bg-gray-300 hover:bg-gray-400 transition">
+                            <td class="px-4 py-2">
+                                <input data-id="<%=item._id%>"  
+                                    class="checkboxInput" type="checkbox"
+                                    <%= item.completed ? 'checked' :"" %>
+
+                                >
+                            </td>
+                            <td class="px-4 py-2 <%=item.completed ? 'line-through':'' %> "><%= item.text %></td>
+                            <td class="px-4 py-2"><%= item.date.toLocaleDateString() %></td>
+                            <td class="px-4 py-2"><button data-id="<%=item._id%>" class="deleteBtn bg-red-500 text-white py-1 px-4 rounded">delete</button></td>
+                            <td class="px-4 py-2"><button data-id="<%=item._id%>" class="editBtn bg-green-600 py-1 px-4 rounded">Edit</button></td>
+                        </tr>
+                <%})%>
+            
+            </tbody>
+            <%}else{%>
+             <h4>no data</h4>
+             <%}%>
+        </table>
+
+     </div>
+     
+     
+  
+     
+     
+     
+     
+     
+     <!-- Edit Modal -->
+ 
+
+     <div id='editModal'class="fixed inset-0 hidden h-screen bg-black/50   z-50 items-center justify-center">
+        <div class="w-1/3 p-4 flex-col bg-white  border border-black-600 justify-center items-center">
+            <h2 class="text-center font-bold font-2xl">Edit Input</h2>
+            <input id="editInput" class="border border-black-600 w-full" type="text">
+            <div class="flex justify-end gap-2 p-4">
+                <button id="cancelEdit" class="bg-red-600 text-white rounded py-2 px-3">Cancel</button>
+                <button id='saveBtn' class="bg-red-600 text-white rounded py-2 px-4">Save</button>
+            </div>
+        </div>
+     </div>
+
+
+
+
+     
+
+     
+      
+
+     </div>
+     
+
+     <!-- Edit Modal -->
+      <!-- modal for edit -->
+    
+ 
+     
+
+     <script>
+        //post input
+        document.getElementById('btn').addEventListener('click',async()=>{
+            const input=document.getElementById('textInput').value
+            if(!input)return
+            const res=await fetch('/add',{
+                method:"POST",
+                headers:{"content-Type":"application/json"},
+                body:JSON.stringify({data:input})
+            })
+            const result=await res.json()
+            if(result.success){
+                window.location.reload()
+            }
+            
+        })
+
+        //delter value
+
+        document.querySelectorAll('.deleteBtn').forEach((btn)=>{
+            btn.addEventListener('click',async()=>{
+                const id=btn.getAttribute('data-id')
+                const res=await fetch(`/delete/${id}`,{
+                    method:'DELETE'
+                })
+
+                const result=await res.json()
+                if(result.success){
+                    window.location.reload()
+                }
+            })
+        })
+
+        //edit button
+
+        let currentEditId=null 
+        document.querySelectorAll('.editBtn').forEach((btn)=>{
+            btn.addEventListener('click',()=>{
+                currentEditId=btn.getAttribute('data-id')
+                const row=btn.closest('tr')
+                const currentText=row.querySelector('td').innerText;
+
+                document.getElementById('editInput').value=currentText;
+                document.getElementById('editModal').classList.remove('hidden')
+                document.getElementById('editModal').classList.add('flex')
+
+            })
+        })
+        //cancel button in edit
+        document.getElementById('cancelEdit').addEventListener('click',()=>{
+            document.getElementById('editModal').classList.add('hidden')
+    
+         })
+
+         //save button in edit
+         document.getElementById('saveBtn').addEventListener('click',async()=>{
+            const input=document.getElementById('editInput').value;
+            if(!input)return 
+            const res=await fetch(`/edit/${currentEditId}`,{
+                method:'PUT',
+                headers:{'content-Type':'application/json'},
+                body:JSON.stringify({text:input})
+            })
+
+            const result=await res.json();
+            if(result.success){
+                window.location.reload()
+            }
+        
+         })
+
+         //select
+         document.querySelectorAll('.checkboxInput').forEach((box)=>{
+            box.addEventListener('change',async()=>{
+                const id=box.getAttribute('data-id')
+                const checked=box.checked;
+                const row=box.closest('tr')
+                const nameCell=row.querySelectorAll('td')[1];
+                
+
+                // update db
+                const res=await fetch(`/toggle/${id}`,{
+                    method:"PUT",
+                    headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify({completed:checked})
+                })
+                const result=await res.json()
+                if(result){
+                    window.location.reload()
+                }
+            })
+         })
+     </script>
+    
+</body>
+</html>
